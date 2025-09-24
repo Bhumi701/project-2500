@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="ml">
+<head>
+    <meta charset="UTF-8">
+    <title>ഡിജിറ്റൽ കൃഷി ഓഫീസർ</title>
+</head>
+<body>
+    <h1>🌾 ഡിജിറ്റൽ കൃഷി ഓഫീസർ</h1>
+    <form method="POST">
+        {{ form.hidden_tag() }}
+        <div>
+            {{ form.query.label }}<br>
+            {{ form.query(rows=4, cols=50) }}
+        </div>
+        <div>
+            {{ form.submit() }}
+        </div>
+    </form>
+
+    {% if response %}
+        <h3>📌 ഉത്തരം:</h3>
+        <p>{{ response }}</p>
+    {% endif %}
+</body>
+</html>

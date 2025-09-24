@@ -1,0 +1,343 @@
+import pytest
+import tempfile
+import os
+from app import create_app, db
+from app.models.user import User
+from app.models.grievance import Grievance
+
+@pytest.fixture
+def app():
+    """Create and configure a new app instance for each test."""
+    # Create a temporary file for the test database
+    db_fd, db_path = tempfile.mkstemp()
+    
+    test_config = {
+        'TESTING': True,
+        'SQLALCHEMY_DATABASE_URI': f'sqlite:///{db_path}',
+        'WTF_CSRF_ENABLED': False,
+        'SECRET_KEY': 'test-secret-key',
+        'JWT_SECRET_KEY': 'test-jwt-secret'
+    }
+    
+    app = create_app('testing')
+    app.config.update(test_config)
+    
+    with app.app_context():
+        db.create_all()
+        yield app
+        db.drop_all()
+    
+    os.close(db_fd)
+    os.unlink(db_path)
+
+@pytest.fixture
+def client(app):
+    """A test client for the app."""
+    return app.test_client()
+
+@pytest.fixture
+def runner(app):
+    """A test runner for the app's Click commands."""
+    return app.test_cli_runner()
+
+@pytest.fixture
+def sample_user(app):
+    """Create a sample user for testing."""
+    with app.app_context():
+        user = User(
+            name='Test User',
+            email='test@example.com',
+            location='Test Location',
+            preferred_language='en'
+        )
+        user.set_password('testpassword123')
+        db.session.add(user)
+        db.session.commit()
+        return user
+
+@pytest.fixture
+def auth_headers(client, sample_user):
+    """Get authentication headers for API requests."""
+    response = client.post('/api/auth/login', json={
+        'email': sample_user.email,
+        'password': 'testpassword123'
+    })
+    
+    token = response.get_json()['access_token']
+    return {'Authorization': f'Bearer {token}'}
+
+# ========================================
+# tests/unit/test_models.py
+# ========================================
+
+import pytest
+from app.models.user import User
+from app.models.grievance import Grievance
+from app.extensions import db
+
+class TestUserModel:
+    def test_user_creation(self, app):
+        """Test user creation."""
+        with app.app_context():
+            user = User(
+                name='John Doe',
+                email='john@example.com',
+                location='Kerala',
+                preferred_language='en'
+            )
+            user.set_password('securepassword')
+            
+            db.session.add(user)
+            db.session.commit()
+            
+            assert user.id is not None
+            assert user.name == 'John Doe'
+            assert user.email == 'john@example.com'
+            assert user.check_password('securepassword') is True
+            assert user.check_password('wrongpassword') is False
+
+    def test_user_to_dict(self, app, sample_user):
+        """Test user serialization."""
+        with app.app_context():
+            user_dict = sample_user.to_dict()
+            
+            assert 'id' in user_dict
+            assert user_dict['name'] == 'Test User'
+            assert user_dict['email'] == 'test@example.com'
+            assert 'password_hash' not in user_dict
+
+class TestGrievanceModel:
+    def test_grievance_creation(self, app, sample_user):
+        """Test grievance creation."""
+        with app.app_context():
+            grievance = Grievance(
+                user_id=sample_user.id,
+                subject='Test Grievance',
+                description='This is a test grievance description.',
+                category='crop_insurance'
+            )
+            
+            db.session.add(grievance)
+            db.session.commit()
+            
+            assert grievance.id is not None
+            assert grievance.subject == 'Test Grievance'
+            assert grievance.status == 'pending'
+            assert grievance.user_id == sample_user.id
+
+# ========================================
+# tests/unit/test_services.py
+# ========================================
+
+import pytest
+from unittest.mock import Mock, patch
+from app.services.ai_service import AIService
+from app.services.translation_service import TranslationService
+from app.services.weather_service import WeatherService
+
+class TestAIService:
+    def test_ai_service_initialization(self):
+        """Test AI service initialization."""
+        ai_service = AIService()
+        assert ai_service.model == "gpt-3.5-turbo"
+
+    @patch('openai.ChatCompletion.create')
+    def test_get_response(self, mock_openai):
+        """Test AI response generation."""
+        mock_response = Mock()
+        mock_response.choices = [Mock()]
+        mock_response.choices[0].message.content = "Test AI response"
+        mock_openai.return_value = mock_response
+        
+        ai_service = AIService()
+        response = ai_service.get_response("Test message")
+        
+        assert response == "Test AI response"
+        mock_openai.assert_called_once()
+
+    def test_fallback_response(self):
+        """Test fallback response when AI service fails."""
+        ai_service = AIService()
+        response = ai_service._get_fallback_response("fertilizer advice")
+        
+        assert "fertilizer" in response.lower()
+        assert "soil testing" in response.lower()
+
+class TestTranslationService:
+    def test_translation_service_initialization(self):
+        """Test translation service initialization."""
+        translation_service = TranslationService()
+        assert 'en' in translation_service.supported_languages
+        assert 'ml' in translation_service.supported_languages
+
+    def test_same_language_translation(self):
+        """Test translation with same source and target language."""
+        translation_service = TranslationService()
+        result = translation_service.translate("Hello", 'en', 'en')
+        assert result == "Hello"
+
+class TestWeatherService:
+    def test_weather_service_initialization(self):
+        """Test weather service initialization."""
+        weather_service = WeatherService()
+        assert weather_service.base_url == "http://api.openweathermap.org/data/2.5"
+
+    def test_farming_advice_generation(self):
+        """Test farming advice based on weather conditions."""
+        weather_service = WeatherService()
+        
+        # Test hot weather advice
+        advice = weather_service._get_farming_advice(25, 40, 0)
+        assert "shade" in advice.lower()
+        assert "irrigation" in advice.lower()
+        
+        # Test rainy weather advice
+        advice = weather_service._get_farming_advice(20, 30, 25)
+        assert "drainage" in advice.lower()
+
+# ========================================
+# tests/integration/test_api_routes.py
+# ========================================
+
+import pytest
+import json
+
+class TestAuthRoutes:
+    def test_user_registration(self, client):
+        """Test user registration endpoint."""
+        user_data = {
+            'name': 'Test User',
+            'email': 'testuser@example.com',
+            'password': 'securepassword123',
+            'location': 'Kerala',
+            'preferred_language': 'en'
+        }
+        
+        response = client.post('/api/auth/register', 
+                             data=json.dumps(user_data),
+                             content_type='application/json')
+        
+        assert response.status_code == 201
+        data = response.get_json()
+        assert 'access_token' in data
+        assert data['user']['email'] == 'testuser@example.com'
+
+    def test_user_login(self, client, sample_user):
+        """Test user login endpoint."""
+        login_data = {
+            'email': sample_user.email,
+            'password': 'testpassword123'
+        }
+        
+        response = client.post('/api/auth/login',
+                             data=json.dumps(login_data),
+                             content_type='application/json')
+        
+        assert response.status_code == 200
+        data = response.get_json()
+        assert 'access_token' in data
+        assert data['user']['email'] == sample_user.email
+
+    def test_get_profile(self, client, auth_headers):
+        """Test get user profile endpoint."""
+        response = client.get('/api/auth/profile', headers=auth_headers)
+        
+        assert response.status_code == 200
+        data = response.get_json()
+        assert 'user' in data
+
+class TestChatRoutes:
+    def test_text_chat(self, client, auth_headers):
+        """Test text chat endpoint."""
+        chat_data = {
+            'message': 'What fertilizer should I use for rice?',
+            'language': 'en'
+        }
+        
+        response = client.post('/api/chat/',
+                             data=json.dumps(chat_data),
+                             content_type='application/json',
+                             headers=auth_headers)
+        
+        assert response.status_code == 200
+        data = response.get_json()
+        assert 'response' in data
+        assert 'session_id' in data
+
+    def test_chat_sessions(self, client, auth_headers):
+        """Test get chat sessions endpoint."""
+        response = client.get('/api/chat/sessions', headers=auth_headers)
+        
+        assert response.status_code == 200
+        data = response.get_json()
+        assert 'sessions' in data
+        assert isinstance(data['sessions'], list)
+
+class TestGrievanceRoutes:
+    def test_submit_grievance(self, client, auth_headers):
+        """Test grievance submission endpoint."""
+        grievance_data = {
+            'subject': 'Water supply issue in my area',
+            'description': 'There has been no proper water supply for irrigation in our area for the past month. This is severely affecting crop production.',
+            'category': 'water_supply',
+            'priority': 'high'
+        }
+        
+        response = client.post('/api/grievances/',
+                             data=json.dumps(grievance_data),
+                             content_type='application/json',
+                             headers=auth_headers)
+        
+        assert response.status_code == 201
+        data = response.get_json()
+        assert 'grievance' in data
+        assert data['grievance']['subject'] == grievance_data['subject']
+
+    def test_get_grievances(self, client, auth_headers):
+        """Test get user grievances endpoint."""
+        response = client.get('/api/grievances/', headers=auth_headers)
+        
+        assert response.status_code == 200
+        data = response.get_json()
+        assert 'grievances' in data
+        assert isinstance(data['grievances'], list)
+
+    def test_get_grievance_categories(self, client, auth_headers):
+        """Test get grievance categories endpoint."""
+        response = client.get('/api/grievances/categories', headers=auth_headers)
+        
+        assert response.status_code == 200
+        data = response.get_json()
+        assert 'categories' in data
+        assert len(data['categories']) > 0
+
+class TestWeatherRoutes:
+    def test_get_weather_unauthorized(self, client):
+        """Test weather endpoint without authentication."""
+        response = client.get('/api/weather/')
+        assert response.status_code == 401
+
+    def test_get_weather_authorized(self, client, auth_headers):
+        """Test weather endpoint with authentication."""
+        response = client.get('/api/weather/', headers=auth_headers)
+        # This might return 503 if weather API is not configured
+        assert response.status_code in [200, 503]
+
+class TestBlogRoutes:
+    def test_get_blog_posts(self, client, auth_headers):
+        """Test get blog posts endpoint."""
+        response = client.get('/api/blog/', headers=auth_headers)
+        
+        assert response.status_code == 200
+        data = response.get_json()
+        assert 'posts' in data
+        assert isinstance(data['posts'], list)
+
+    def test_get_blog_categories(self, client, auth_headers):
+        """Test get blog categories endpoint."""
+        response = client.get('/api/blog/categories', headers=auth_headers)
+        
+        assert response.status_code == 200
+        data = response.get_json()
+        assert 'categories' in data
+        assert len(data['categories']) > 0
