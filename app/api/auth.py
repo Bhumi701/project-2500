@@ -5,10 +5,17 @@ from app.models.user import User
 from app.utils.validators import validate_email, validate_password
 from app.tasks.email_tasks import send_welcome_email
 import logging
+from app.extensions import db
 
 auth_bp = Blueprint('auth', __name__)
 logger = logging.getLogger(__name__)
 
+
+@auth_bp.route('/some-route')
+def some_function():
+    from app.extensions import db 
+    
+    
 @auth_bp.route('/register', methods=['POST'])
 def register():
     try:

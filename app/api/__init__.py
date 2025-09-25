@@ -1,4 +1,4 @@
-from app.api.auth import auth_bp
+#from app.api.auth import auth_bp
 from app.api.weather import weather_bp
 from app.api.chat import chat_bp
 from app.api.grievances import grievances_bp

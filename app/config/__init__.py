@@ -1,4 +1,4 @@
-from flask import Flask
+"""from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_jwt_extended import JWTManager
 from flask_mail import Mail
@@ -85,5 +85,34 @@ def make_celery(app):
                 return self.run(*args, **kwargs)
     
     celery.Task = ContextTask
-    return celery
+    return celery"""
 
+# app/config/__init__.py
+import os
+from datetime import timedelta
+
+class Config:
+    """Base configuration class"""
+    SECRET_KEY = os.environ.get('SECRET_KEY') or 'your-secret-key-here'
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
+    SQLALCHEMY_RECORD_QUERIES = True
+    
+    # JWT Configuration
+    JWT_SECRET_KEY = os.environ.get('JWT_SECRET_KEY') or 'jwt-secret-string'
+    JWT_ACCESS_TOKEN_EXPIRES = timedelta(hours=1)
+    JWT_REFRESH_TOKEN_EXPIRES = timedelta(days=30)
+    
+    # Mail Configuration
+    MAIL_SERVER = os.environ.get('MAIL_SERVER') or 'smtp.gmail.com'
+    MAIL_PORT = int(os.environ.get('MAIL_PORT') or 587)
+    MAIL_USE_TLS = os.environ.get('MAIL_USE_TLS', 'true').lower() in ['true', 'on', '1']
+    MAIL_USERNAME = os.environ.get('MAIL_USERNAME')
+    MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')
+    
+    # Upload Configuration
+    UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'uploads')
+    MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB max file size
+    
+    @staticmethod
+    def init_app(app):
+        pass

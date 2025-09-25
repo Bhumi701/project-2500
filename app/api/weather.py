@@ -8,6 +8,7 @@ from app.models.user import User
 from app.services.weather_service import WeatherService
 from app.utils.decorators import cache_response
 import logging
+from app.extensions import db
 
 weather_bp = Blueprint('weather', __name__)
 logger = logging.getLogger(__name__)

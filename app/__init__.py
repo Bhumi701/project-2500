@@ -100,6 +100,7 @@ from flask_bcrypt import Bcrypt
 import os
 from dotenv import load_dotenv
 from app.api.health import health_bp
+from app.extensions import db, migrate, jwt
 
 
 # Load environment variables
@@ -116,18 +117,33 @@ bcrypt = Bcrypt()
 def create_app(config_name='development'):
     app = Flask(__name__)
     
+    # Load configuration
+    if config_name == 'development':
+        from app.config.development import DevelopmentConfig
+        app.config.from_object(DevelopmentConfig)
+    elif config_name == 'production':
+        from app.config.production import ProductionConfig
+        app.config.from_object(ProductionConfig)
+    elif config_name == 'testing':
+        from app.config.testing import TestingConfig
+        app.config.from_object(TestingConfig)
+    else:
+        # Default to development
+        from app.config.development import DevelopmentConfig
+        app.config.from_object(DevelopmentConfig)
     # Configuration
     app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-key')
     app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///agricultural_advisory.db')
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['JWT_SECRET_KEY'] = os.environ.get('JWT_SECRET_KEY', 'jwt-secret')
-    
+    app.config.from_object('app.config.Config')
     # Mail configuration
     app.config['MAIL_SERVER'] = 'smtp.gmail.com'
     app.config['MAIL_PORT'] = 587
     app.config['MAIL_USE_TLS'] = True
     app.config['MAIL_USERNAME'] = os.environ.get('MAIL_USERNAME')
     app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD')
+    
     
     # Initialize extensions with app
     db.init_app(app)
@@ -138,16 +154,18 @@ def create_app(config_name='development'):
     bcrypt.init_app(app)
     
     # Register blueprints
+   
+    from app.api.health import health_bp
     from app.api.auth import auth_bp
     from app.api.chat import chat_bp
     from app.api.weather import weather_bp
     from app.api.grievances import grievances_bp
     
-    app.register_blueprint(auth_bp, url_prefix='/api/auth')
     app.register_blueprint(chat_bp, url_prefix='/api/chat')
     app.register_blueprint(weather_bp, url_prefix='/api/weather')
     app.register_blueprint(grievances_bp, url_prefix='/api/grievances')
     app.register_blueprint(health_bp,url_prefix='/api')
+    app.register_blueprint(auth_bp, url_prefix='/api/auth')
 
     
     # Health check route
