@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Krish-Sahayak - Farmer Login</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Malayalam:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { 
+            font-family: 'Inter', 'Noto Sans Malayalam', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .floating-animation {
+            animation: float 6s ease-in-out infinite;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+        .slide-in {
+            animation: slideIn 0.5s ease-out;
+        }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .pulse-glow {
+            animation: pulseGlow 2s infinite;
+        }
+        @keyframes pulseGlow {
+            0%, 100% { box-shadow: 0 0 20px rgba(34, 197, 94, 0.3); }
+            50% { box-shadow: 0 0 30px rgba(34, 197, 94, 0.6); }
+        }
+        .language-switcher {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 50;
+        }
+        .lang-btn {
+            transition: all 0.3s ease;
+        }
+        .lang-btn.active {
+            background: #16a34a;
+            color: white;
+            transform: scale(1.05);
+        }
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            padding: 15px 20px;
+            border-radius: 10px;
+            color: white;
+            animation: slideIn 0.3s ease;
+        }
+        .notification.success { background: #10b981; }
+        .notification.error { background: #ef4444; }
+        .notification.warning { background: #f59e0b; }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+    <!-- Language Switcher -->
+    <div class="language-switcher flex gap-2 bg-white/20 backdrop-blur-sm rounded-full p-1">
+        <button id="lang-en" class="lang-btn active px-4 py-2 rounded-full font-semibold text-sm">EN</button>
+        <button id="lang-ml" class="lang-btn px-4 py-2 rounded-full font-semibold text-sm">ML</button>
+    </div>
+
+    <!-- Floating Background Elements -->
+    <div class="fixed inset-0 overflow-hidden pointer-events-none">
+        <!-- ... keep the same floating elements ... -->
+    </div>
+
+    <!-- Main Auth Card -->
+    <div class="w-full max-w-md slide-in">
+        <div class="bg-white/20 backdrop-blur-lg rounded-3xl shadow-2xl border border-white/30 p-8">
+            <!-- Header -->
+            <div class="text-center mb-8">
+                <div class="flex items-center justify-center mb-4">
+                    <svg class="w-12 h-12 text-white mr-3 floating-animation" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M12.586 4.586a2 2 0 112.828 2.828l-3 3a2 2 0 01-2.828 0 1 1 0 00-1.414 1.414 4 4 0 005.656 0l3-3a4 4 0 00-5.656-5.656l-1.5 1.5a1 1 0 101.414 1.414l1.5-1.5zm-5 5a2 2 0 012.828 0 1 1 0 101.414-1.414 4 4 0 00-5.656 0l-3 3a4 4 0 105.656 5.656l1.5-1.5a1 1 0 10-1.414-1.414l-1.5 1.5a2 2 0 11-2.828-2.828l3-3z" clip-rule="evenodd"/>
+                    </svg>
+                    <h1 id="app-title" class="text-3xl font-bold text-white">Krish-Sahayak</h1>
+                </div>
+                <p id="app-subtitle" class="text-white/80">Your Agricultural Companion</p>
+            </div>
+
+            <!-- Auth Tabs -->
+            <div class="flex bg-white/20 rounded-xl p-1 mb-6">
+                <button id="login-tab" class="flex-1 py-3 px-4 rounded-lg font-semibold transition-all duration-300 active-tab text-white">Login</button>
+                <button id="signup-tab" class="flex-1 py-3 px-4 rounded-lg font-semibold transition-all duration-300 text-white/60">Sign Up</button>
+            </div>
+
+            <!-- Login Form -->
+            <form id="login-form" class="space-y-4">
+                <div>
+                    <input type="email" id="login-email" placeholder="Email Address" 
+                           class="w-full px-4 py-3 bg-white/20 border border-white/30 rounded-xl text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-transparent transition-all duration-300" required>
+                </div>
+                <div class="relative">
+                    <input type="password" id="login-password" placeholder="Password" 
+                           class="w-full px-4 py-3 bg-white/20 border border-white/30 rounded-xl text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-transparent transition-all duration-300" required>
+                    <button type="button" class="password-toggle absolute right-3 top-1/2 transform -translate-y-1/2 text-white/60 hover:text-white transition-colors">
+                        👁️
+                    </button>
+                </div>
+                <div class="flex items-center justify-between">
+                    <label class="flex items-center space-x-2 text-white/80 text-sm">
+                        <input type="checkbox" id="remember-me" class="rounded bg-white/20 border-white/30">
+                        <span id="remember-me-text">Remember me</span>
+                    </label>
+                    <a href="#" class="text-white/80 hover:text-white text-sm transition-colors" id="forgot-password">Forgot Password?</a>
+                </div>
+                <button type="submit" class="w-full bg-gradient-to-r from-green-500 to-green-600 text-white py-3 rounded-xl font-semibold hover:from-green-600 hover:to-green-700 transition-all duration-300 transform hover:scale-105 pulse-glow">
+                    <span id="login-btn-text">Login to Dashboard</span>
+                </button>
+            </form>
+
+            <!-- Signup Form (Hidden by default) -->
+            <form id="signup-form" class="space-y-4 hidden">
+                <div class="grid grid-cols-2 gap-4">
+                    <input type="text" id="signup-fname" placeholder="First Name" 
+                           class="px-4 py-3 bg-white/20 border border-white/30 rounded-xl text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-transparent transition-all duration-300" required>
+                    <input type="text" id="signup-lname" placeholder="Last Name" 
+                           class="px-4 py-3 bg-white/20 border border-white/30 rounded-xl text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-transparent transition-all duration-300" required>
+                </div>
+                <input type="email" id="signup-email" placeholder="Email Address" 
+                       class="w-full px-4 py-3 bg-white/20 border border-white/30 rounded-xl text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-transparent transition-all duration-300" required>
+                <input type="tel" id="signup-phone" placeholder="Phone Number" 
+                       class="w-full px-4 py-3 bg-white/20 border border-white/30 rounded-xl text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-transparent transition-all duration-300" required>
+                <div class="grid grid-cols-2 gap-4">
+                    <select id="signup-state" class="px-4 py-3 bg-white/20 border border-white/30 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-transparent transition-all duration-300" required>
+                        <option value="" data-lang="select_state">Select State</option>
+                        <option value="Kerala">Kerala</option>
+                        <option value="Tamil Nadu">Tamil Nadu</option>
+                        <option value="Karnataka">Karnataka</option>
+                    </select>
+                    <select id="signup-district" disabled class="px-4 py-3 bg-white/20 border border-white/30 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-transparent transition-all duration-300" required>
+                        <option value="" data-lang="select_district">Select District</option>
+                    </select>
+                </div>
+                <input type="text" id="signup-village" placeholder="Village/Town" 
+                       class="w-full px-4 py-3 bg-white/20 border border-white/30 rounded-xl text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-transparent transition-all duration-300" required>
+                <div class="relative">
+                    <input type="password" id="signup-password" placeholder="Password" 
+                           class="w-full px-4 py-3 bg-white/20 border border-white/30 rounded-xl text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-transparent transition-all duration-300" required minlength="6">
+                </div>
+                <div class="relative">
+                    <input type="password" id="signup-confirm" placeholder="Confirm Password" 
+                           class="w-full px-4 py-3 bg-white/20 border border-white/30 rounded-xl text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-transparent transition-all duration-300" required>
+                </div>
+                <button type="submit" class="w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white py-3 rounded-xl font-semibold hover:from-blue-600 hover:to-blue-700 transition-all duration-300 transform hover:scale-105">
+                    <span id="signup-btn-text">Create Account</span>
+                </button>
+            </form>
+
+            <!-- Social Login -->
+            <div class="mt-6 pt-6 border-t border-white/20">
+                <p class="text-center text-white/60 mb-4" id="social-login-text">Or continue with</p>
+                <div class="grid grid-cols-2 gap-3">
+                    <button id="google-login" class="flex items-center justify-center space-x-2 bg-white/20 hover:bg-white/30 text-white py-3 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105">
+                        <svg class="w-5 h-5" viewBox="0 0 24 24">
+                            <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                        </svg>
+                        <span id="google-btn">Google</span>
+                    </button>
+                    <button id="aadhaar-login" class="flex items-center justify-center space-x-2 bg-white/20 hover:bg-white/30 text-white py-3 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm.5-13h-1v6l4.25 2.52.75-1.23-3.5-2.08V7z"/>
+                        </svg>
+                        <span id="aadhaar-btn">Aadhaar</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // API Base URL
+        const API_BASE = '/api';
+
+        // Authentication functions
+        const authAPI = {
+            async login(email, password) {
+                const response = await fetch(`${API_BASE}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                return await response.json();
+            },
+
+            async register(userData) {
+                const response = await fetch(`${API_BASE}/auth/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(userData)
+                });
+                return await response.json();
+            },
+
+            async getCurrentUser(token) {
+                const response = await fetch(`${API_BASE}/auth/me`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                return await response.json();
+            }
+        };
+
+        // Token management
+        const tokenManager = {
+            getToken() {
+                return localStorage.getItem('ks_token');
+            },
+
+            setToken(token) {
+                localStorage.setItem('ks_token', token);
+            },
+
+            removeToken() {
+                localStorage.removeItem('ks_token');
+                localStorage.removeItem('ks_user');
+            },
+
+            setUser(user) {
+                localStorage.setItem('ks_user', JSON.stringify(user));
+            },
+
+            getUser() {
+                const user = localStorage.getItem('ks_user');
+                return user ? JSON.parse(user) : null;
+            }
+        };
+
+        // Show notification
+        function showNotification(message, type = 'success') {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.innerHTML = `
+                <div class="flex items-center space-x-2">
+                    <span>${type === 'success' ? '✅' : type === 'error' ? '❌' : '⚠️'}</span>
+                    <span>${message}</span>
+                </div>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+
+        // Set loading state
+        function setLoading(button, isLoading) {
+            if (isLoading) {
+                button.disabled = true;
+                button.innerHTML = '<div class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mx-auto"></div>';
+            } else {
+                button.disabled = false;
+                button.innerHTML = button.getAttribute('data-original-text');
+            }
+        }
+
+        // ... rest of the JavaScript code from previous login.html ...
+
+        // Updated form handlers
+        async function handleLogin(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            const rememberMe = document.getElementById('remember-me').checked;
+            
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            submitBtn.setAttribute('data-original-text', submitBtn.innerHTML);
+            setLoading(submitBtn, true);
+            
+            try {
+                const result = await authAPI.login(email, password);
+                
+                if (result.success) {
+                    tokenManager.setToken(result.token);
+                    tokenManager.setUser(result.user);
+                    showNotification('Login successful!', 'success');
+                    
+                    setTimeout(() => {
+                        window.location.href = '/dashboard';
+                    }, 1000);
+                } else {
+                    showNotification(result.error || 'Login failed', 'error');
+                    setLoading(submitBtn, false);
+                }
+            } catch (error) {
+                showNotification('Network error. Please try again.', 'error');
+                setLoading(submitBtn, false);
+            }
+        }
+
+        async function handleSignup(e) {
+            e.preventDefault();
+            
+            const userData = {
+                email: document.getElementById('signup-email').value,
+                password: document.getElementById('signup-password').value,
+                first_name: document.getElementById('signup-fname').value,
+                last_name: document.getElementById('signup-lname').value,
+                phone: document.getElementById('signup-phone').value,
+                state: document.getElementById('signup-state').value,
+                district: document.getElementById('signup-district').value,
+                village: document.getElementById('signup-village').value,
+                language: currentLang
+            };
+            
+            const confirmPassword = document.getElementById('signup-confirm').value;
+            
+            if (userData.password !== confirmPassword) {
+                showNotification('Passwords do not match', 'error');
+                return;
+            }
+            
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            submitBtn.setAttribute('data-original-text', submitBtn.innerHTML);
+            setLoading(submitBtn, true);
+            
+            try {
+                const result = await authAPI.register(userData);
+                
+                if (result.success) {
+                    tokenManager.setToken(result.token);
+                    tokenManager.setUser(result.user);
+                    showNotification('Account created successfully!', 'success');
+                    
+                    setTimeout(() => {
+                        window.location.href = '/dashboard';
+                    }, 1000);
+                } else {
+                    showNotification(result.error || 'Registration failed', 'error');
+                    setLoading(submitBtn, false);
+                }
+            } catch (error) {
+                showNotification('Network error. Please try again.', 'error');
+                setLoading(submitBtn, false);
+            }
+        }
+
+        // Update event listeners
+        loginForm.addEventListener('submit', handleLogin);
+        signupForm.addEventListener('submit', handleSignup);
+
+        // Check if user is already logged in
+        document.addEventListener('DOMContentLoaded', () => {
+            const token = tokenManager.getToken();
+            const user = tokenManager.getUser();
+            
+            if (token && user) {
+                // Verify token is still valid
+                authAPI.getCurrentUser(token).then(result => {
+                    if (result.success) {
+                        window.location.href = '/dashboard';
+                    } else {
+                        tokenManager.removeToken();
+                    }
+                }).catch(() => {
+                    tokenManager.removeToken();
+                });
+            }
+            
+            // Initialize the page
+            setLanguage('en');
+            showLoginForm();
+        });
+    </script>
+</body>
+</html>

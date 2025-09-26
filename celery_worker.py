@@ -1,3 +1,5 @@
+#ye batayega background tasks kaise handle ho rahe hain.
+
 from app import create_app, celery
 
 # Create Flask app instance

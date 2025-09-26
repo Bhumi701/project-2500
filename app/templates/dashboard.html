@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Krish-Sahayak</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Malayalam:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #16a34a;
+            --primary-dark: #15803d;
+            --secondary: #3b82f6;
+            --accent: #f59e0b;
+            --danger: #ef4444;
+            --success: #10b981;
+        }
+        
+        body {
+            font-family: 'Inter', 'Noto Sans Malayalam', sans-serif;
+            background: #f8fafc;
+        }
+        
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .floating-card {
+            animation: float 6s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        .slide-in {
+            animation: slideIn 0.5s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .pulse-glow {
+            animation: pulseGlow 2s infinite;
+        }
+        
+        @keyframes pulseGlow {
+            0%, 100% { box-shadow: 0 0 20px rgba(34, 197, 94, 0.3); }
+            50% { box-shadow: 0 0 30px rgba(34, 197, 94, 0.6); }
+        }
+        
+        .feature-card {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+        
+        .loading-spinner {
+            border: 3px solid #f3f4f6;
+            border-top: 3px solid #16a34a;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .lang-btn.active {
+            background: #16a34a;
+            color: white;
+            transform: scale(1.05);
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            padding: 15px 20px;
+            border-radius: 10px;
+            color: white;
+            animation: slideIn 0.3s ease;
+        }
+        
+        .notification.success { background: #10b981; }
+        .notification.error { background: #ef4444; }
+        .notification.warning { background: #f59e0b; }
+    </style>
+</head>
+<body class="min-h-screen bg-gray-50">
+    <!-- Navigation Header -->
+    <nav class="bg-green-600 text-white shadow-lg">
+        <div class="container mx-auto px-4">
+            <div class="flex justify-between items-center py-4">
+                <div class="flex items-center space-x-3">
+                    <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M12.586 4.586a2 2 0 112.828 2.828l-3 3a2 2 0 01-2.828 0 1 1 0 00-1.414 1.414 4 4 0 005.656 0l3-3a4 4 0 00-5.656-5.656l-1.5 1.5a1 1 0 101.414 1.414l1.5-1.5zm-5 5a2 2 0 012.828 0 1 1 0 101.414-1.414 4 4 0 00-5.656 0l-3 3a4 4 0 105.656 5.656l1.5-1.5a1 1 0 10-1.414-1.414l-1.5 1.5a2 2 0 11-2.828-2.828l3-3z" clip-rule="evenodd"/>
+                    </svg>
+                    <span class="text-xl font-bold">Krish-Sahayak</span>
+                </div>
+                
+                <div class="flex items-center space-x-4">
+                    <!-- Language Switcher -->
+                    <div class="flex bg-white/20 rounded-full p-1">
+                        <button id="lang-en" class="lang-btn active px-3 py-1 rounded-full text-sm font-medium">EN</button>
+                        <button id="lang-ml" class="lang-btn px-3 py-1 rounded-full text-sm font-medium">ML</button>
+                    </div>
+                    
+                    <!-- User Menu -->
+                    <div class="relative group">
+                        <button class="flex items-center space-x-2 bg-white/20 px-3 py-2 rounded-lg">
+                            <i class="fas fa-user"></i>
+                            <span id="user-name">Loading...</span>
+                            <i class="fas fa-chevron-down text-xs"></i>
+                        </button>
+                        <div class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 hidden group-hover:block">
+                            <a href="#" class="block px-4 py-2 text-gray-800 hover:bg-gray-100">
+                                <i class="fas fa-cog mr-2"></i>
+                                <span data-lang="settings">Settings</span>
+                            </a>
+                            <a href="#" class="block px-4 py-2 text-gray-800 hover:bg-gray-100">
+                                <i class="fas fa-history mr-2"></i>
+                                <span data-lang="activity">Activity</span>
+                            </a>
+                            <div class="border-t my-1"></div>
+                            <a href="#" onclick="logout()" class="block px-4 py-2 text-red-600 hover:bg-gray-100">
+                                <i class="fas fa-sign-out-alt mr-2"></i>
+                                <span data-lang="logout">Logout</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Dashboard -->
+    <div class="container mx-auto px-4 py-8">
+        <!-- Welcome Section -->
+        <div class="glass-effect rounded-2xl p-6 mb-8 slide-in">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div>
+                    <h1 id="welcome-title" class="text-3xl font-bold text-gray-800 mb-2">Welcome back, Farmer!</h1>
+                    <p id="welcome-subtitle" class="text-gray-600">Here's your agricultural dashboard</p>
+                </div>
+                <div class="mt-4 md:mt-0">
+                    <div class="flex space-x-2">
+                        <span class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm" id="user-location">Loading location...</span>
+                        <span class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm" id="current-date">Loading date...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <!-- Agri-Assistant Chat -->
+            <div class="feature-card glass-effect rounded-2xl p-6 text-center floating-card" onclick="navigateTo('/chat')">
+                <div class="w-16 h-16 bg-green-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-robot text-3xl text-green-600"></i>
+                </div>
+                <h3 class="font-semibold text-lg mb-2" data-lang="agri_assistant">Agri-Assistant Chat</h3>
+                <p class="text-gray-600 text-sm" data-lang="agri_assistant_desc">Get AI-powered agricultural advice</p>
+            </div>
+
+            <!-- Plant Identifier -->
+            <div class="feature-card glass-effect rounded-2xl p-6 text-center floating-card" onclick="navigateTo('/')">
+                <div class="w-16 h-16 bg-blue-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-leaf text-3xl text-blue-600"></i>
+                </div>
+                <h3 class="font-semibold text-lg mb-2" data-lang="plant_identifier">Plant Identifier</h3>
+                <p class="text-gray-600 text-sm" data-lang="plant_identifier_desc">Identify plants and diseases</p>
+            </div>
+
+            <!-- Weather -->
+            <div class="feature-card glass-effect rounded-2xl p-6 text-center floating-card" onclick="showFeature('weather')">
+                <div class="w-16 h-16 bg-yellow-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-cloud-sun text-3xl text-yellow-600"></i>
+                </div>
+                <h3 class="font-semibold text-lg mb-2" data-lang="weather">Weather</h3>
+                <p class="text-gray-600 text-sm" data-lang="weather_desc">Real-time weather updates</p>
+            </div>
+
+            <!-- Market Prices -->
+            <div class="feature-card glass-effect rounded-2xl p-6 text-center floating-card" onclick="showFeature('market-prices')">
+                <div class="w-16 h-16 bg-purple-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-chart-line text-3xl text-purple-600"></i>
+                </div>
+                <h3 class="font-semibold text-lg mb-2" data-lang="market_prices">Market Prices</h3>
+                <p class="text-gray-600 text-sm" data-lang="market_prices_desc">Current crop prices</p>
+            </div>
+        </div>
+
+        <!-- Additional Features Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <!-- Grievances -->
+            <div class="feature-card glass-effect rounded-2xl p-6 text-center" onclick="showFeature('grievances')">
+                <div class="w-16 h-16 bg-red-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-exclamation-triangle text-3xl text-red-600"></i>
+                </div>
+                <h3 class="font-semibold text-lg mb-2" data-lang="grievances">Grievances</h3>
+                <p class="text-gray-600 text-sm" data-lang="grievances_desc">Report agricultural issues</p>
+            </div>
+
+            <!-- Subsidies -->
+            <div class="feature-card glass-effect rounded-2xl p-6 text-center" onclick="showFeature('subsidies')">
+                <div class="w-16 h-16 bg-indigo-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-hand-holding-usd text-3xl text-indigo-600"></i>
+                </div>
+                <h3 class="font-semibold text-lg mb-2" data-lang="subsidies">Subsidies</h3>
+                <p class="text-gray-600 text-sm" data-lang="subsidies_desc">Government subsidy schemes</p>
+            </div>
+
+            <!-- Govt Schemes -->
+            <div class="feature-card glass-effect rounded-2xl p-6 text-center" onclick="showFeature('govt-schemes')">
+                <div class="w-16 h-16 bg-teal-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-landmark text-3xl text-teal-600"></i>
+                </div>
+                <h3 class="font-semibold text-lg mb-2" data-lang="govt_schemes">Govt Schemes</h3>
+                <p class="text-gray-600 text-sm" data-lang="govt_schemes_desc">Agricultural government schemes</p>
+            </div>
+        </div>
+
+        <!-- Feature Content Area -->
+        <div id="feature-content" class="glass-effect rounded-2xl p-6 min-h-96 slide-in">
+            <!-- Default Dashboard Content -->
+            <div id="dashboard-default">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6" data-lang="recent_activity">Recent Activity</h2>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- User Profile -->
+                    <div class="bg-white rounded-xl p-6 shadow-sm">
+                        <h3 class="font-semibold text-lg mb-4" data-lang="your_profile">Your Profile</h3>
+                        <div id="user-profile" class="space-y-3">
+                            <div class="loading-spinner mx-auto"></div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Stats -->
+                    <div class="bg-white rounded-xl p-6 shadow-sm">
+                        <h3 class="font-semibold text-lg mb-4" data-lang="quick_stats">Quick Stats</h3>
+                        <div class="space-y-4">
+                            <div class="flex justify-between items-center p-3 bg-green-50 rounded-lg">
+                                <span data-lang="chats_today">Chats Today</span>
+                                <span class="font-bold text-green-600" id="chats-count">0</span>
+                            </div>
+                            <div class="flex justify-between items-center p-3 bg-blue-50 rounded-lg">
+                                <span data-lang="plants_identified">Plants Identified</span>
+                                <span class="font-bold text-blue-600" id="plants-count">0</span>
+                            </div>
+                            <div class="flex justify-between items-center p-3 bg-yellow-50 rounded-lg">
+                                <span data-lang="grievances_submitted">Grievances Submitted</span>
+                                <span class="font-bold text-yellow-600" id="grievances-count">0</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Feature-specific content will be loaded here -->
+        </div>
+    </div>
+
+    <!-- Feature Modals (Loaded dynamically) -->
+
+    <script>
+        // API Base URL
+        const API_BASE = '/api';
+
+        // Translations
+        const translations = {
+            'en': {
+                'settings': 'Settings',
+                'activity': 'Activity',
+                'logout': 'Logout',
+                'welcome_title': 'Welcome back, Farmer!',
+                'welcome_subtitle': 'Here\'s your agricultural dashboard',
+                'agri_assistant': 'Agri-Assistant Chat',
+                'agri_assistant_desc': 'Get AI-powered agricultural advice',
+                'plant_identifier': 'Plant Identifier',
+                'plant_identifier_desc': 'Identify plants and diseases',
+                'weather': 'Weather',
+                'weather_desc': 'Real-time weather updates',
+                'market_prices': 'Market Prices',
+                'market_prices_desc': 'Current crop prices',
+                'grievances': 'Grievances',
+                'grievances_desc': 'Report agricultural issues',
+                'subsidies': 'Subsidies',
+                'subsidies_desc': 'Government subsidy schemes',
+                'govt_schemes': 'Govt Schemes',
+                'govt_schemes_desc': 'Agricultural government schemes',
+                'recent_activity': 'Recent Activity',
+                'your_profile': 'Your Profile',
+                'quick_stats': 'Quick Stats',
+                'chats_today': 'Chats Today',
+                'plants_identified': 'Plants Identified',
+                'grievances_submitted': 'Grievances Submitted',
+                'name': 'Name',
+                'email': 'Email',
+                'phone': 'Phone',
+                'location': 'Location',
+                'language': 'Language',
+                'join_date': 'Join Date'
+            },
+            'ml': {
+                'settings': 'ക്രമീകരണങ്ങൾ',
+                'activity': 'പ്രവർത്തനങ്ങൾ',
+                'logout': 'ലോഗൗട്ട്',
+                'welcome_title': 'വീണ്ടും സ്വാഗതം, കർഷകൻ!',
+                'welcome_subtitle': 'നിങ്ങളുടെ കാർഷിക ഡാഷ്ബോർഡ് ഇതാ',
+                'agri_assistant': 'കാർഷിക സഹായി ചാറ്റ്',
+                'agri_assistant_desc': 'AI-ശക്തമായ കാർഷിക ഉപദേശം നേടുക',
+                'plant_identifier': 'സസ്യം തിരിച്ചറിയൽ',
+                'plant_identifier_desc': 'സസ്യങ്ങളും രോഗങ്ങളും തിരിച്ചറിയുക',
+                'weather': 'കാലാവസ്ഥ',
+                'weather_desc': 'തത്സമയ കാലാവസ്ഥ അപ്ഡേറ്റുകൾ',
+                'market_prices': 'വിപണി വിലകൾ',
+                'market_prices_desc': 'നിലവിലെ വിള വിലകൾ',
+                'grievances': 'പരാതികൾ',
+                'grievances_desc': 'കാർഷിക പ്രശ്നങ്ങൾ റിപ്പോർട്ട് ചെയ്യുക',
+                'subsidies': 'സബ്സിഡികൾ',
+                'subsidies_desc': 'സർക്കാർ സബ്സിഡി പദ്ധതികൾ',
+                'govt_schemes': 'സർക്കാർ പദ്ധതികൾ',
+                'govt_schemes_desc': 'കാർഷിക സർക്കാർ പദ്ധതികൾ',
+                'recent_activity': 'അവസാന പ്രവർത്തനങ്ങൾ',
+                'your_profile': 'നിങ്ങളുടെ പ്രൊഫൈൽ',
+                'quick_stats': 'ദ്രുത സ്ഥിതിവിവരക്കണക്കുകൾ',
+                'chats_today': 'ഇന്നത്തെ ചാറ്റുകൾ',
+                'plants_identified': 'തിരിച്ചറിഞ്ഞ സസ്യങ്ങൾ',
+                'grievances_submitted': 'സമർപ്പിച്ച പരാതികൾ',
+                'name': 'പേര്',
+                'email': 'ഇമെയിൽ',
+                'phone': 'ഫോൺ',
+                'location': 'സ്ഥലം',
+                'language': 'ഭാഷ',
+                'join_date': 'ചേർന്ന തീയതി'
+            }
+        };
+
+        let currentLang = 'en';
+        let currentUser = null;
+
+        // Token management
+        const tokenManager = {
+            getToken() {
+                return localStorage.getItem('ks_token');
+            },
+            removeToken() {
+                localStorage.removeItem('ks_token');
+                localStorage.removeItem('ks_user');
+            },
+            getUser() {
+                const user = localStorage.getItem('ks_user');
+                return user ? JSON.parse(user) : null;
+            }
+        };
+
+        // API functions
+        const api = {
+            async getCurrentUser() {
+                const token = tokenManager.getToken();
+                if (!token) throw new Error('No token found');
+                
+                const response = await fetch(`${API_BASE}/auth/me`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                return await response.json();
+            },
+
+            async getWeather(location) {
+                const response = await fetch(`${API_BASE}/weather?location=${encodeURIComponent(location)}`);
+                return await response.json();
+            },
+
+            async getMarketPrices(crop = '') {
+                const url = crop ? `${API_BASE}/market-prices?crop=${crop}` : `${API_BASE}/market-prices`;
+                const response = await fetch(url);
+                return await response.json();
+            },
+
+            async getSubsidies() {
+                const response = await fetch(`${API_BASE}/subsidies`);
+                return await response.json();
+            },
+
+            async getGovtSchemes() {
+                const response = await fetch(`${API_BASE}/govt-schemes`);
+                return await response.json();
+            },
+
+            async submitGrievance(grievanceData) {
+                const token = tokenManager.getToken();
+                const response = await fetch(`${API_BASE}/grievances`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(grievanceData)
+                });
+                return await response.json();
+            },
+
+            async getGrievances() {
+                const token = tokenManager.getToken();
+                const response = await fetch(`${API_BASE}/grievances`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                return await response.json();
+            }
+        };
+
+        // Language management
+        function setLanguage(lang) {
+            currentLang = lang;
+            document.querySelectorAll('[data-lang]').forEach(element => {
+                const key = element.getAttribute('data-lang');
+                if (translations[lang][key]) {
+                    element.textContent = translations[lang][key];
+                }
+            });
+            
+            // Update language buttons
+            document.getElementById('lang-en').classList.toggle('active', lang === 'en');
+            document.getElementById('lang-ml').classList.toggle('active', lang === 'ml');
+            
+            // Update welcome title
+            document.getElementById('welcome-title').textContent = translations[lang]['welcome_title'];
+            document.getElementById('welcome-subtitle').textContent = translations[lang]['welcome_subtitle'];
+        }
+
+        // Navigation
+        function navigateTo(url) {
+            window.location.href = url;
+        }
+
+        function showFeature(feature) {
+            const content = document.getElementById('feature-content');
+            content.innerHTML = '<div class="loading-spinner mx-auto mt-20"></div>';
+            
+            setTimeout(() => {
+                loadFeatureContent(feature);
+            }, 500);
+        }
+
+        async function loadFeatureContent(feature) {
+            const content = document.getElementById('feature-content');
+            
+            try {
+                switch(feature) {
+                    case 'weather':
+                        content.innerHTML = await getWeatherContent();
+                        break;
+                    case 'market-prices':
+                        content.innerHTML = await getMarketPricesContent();
+                        break;
+                    case 'grievances':
+                        content.innerHTML = await getGrievancesContent();
+                        break;
+                    case 'subsidies':
+                        content.innerHTML = await getSubsidiesContent();
+                        break;
+                    case 'govt-schemes':
+                        content.innerHTML = await getGovtSchemesContent();
+                        break;
+                    default:
+                        content.innerHTML = document.getElementById('dashboard-default').innerHTML;
+                }
+            } catch (error) {
+                content.innerHTML = `<div class="text-center text-red-600 mt-20">Error loading ${feature}: ${error.message}</div>`;
+            }
+        }
+
+        // Feature content templates
+        async function getWeatherContent() {
+            const location = currentUser ? `${currentUser.village}, ${currentUser.district}` : 'Kerala';
+            const weatherData = await api.getWeather(location);
+            
+            return `
+                <div class="slide-in">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6">${currentLang === 'ml' ? 'കാലാവസ്ഥ വിവരങ്ങൾ' : 'Weather Information'}</h2>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="bg-white rounded-xl p-6 shadow-sm">
+                            <h3 class="font-semibold text-lg mb-4">${currentLang === 'ml' ? 'നിലവിലെ കാലാവസ്ഥ' : 'Current Weather'}</h3>
+                            <div class="text-center">
+                                <i class="fas fa-sun text-6xl text-yellow-500 mb-4"></i>
+                                <div class="text-4xl font-bold text-gray-800">${weatherData.temperature}°C</div>
+                                <div class="text-gray-600 mt-2">${weatherData.condition}</div>
+                                <div class="text-sm text-gray-500 mt-4">
+                                    ${currentLang === 'ml' ? 'ഈർപ്പം' : 'Humidity'}: ${weatherData.humidity}% | 
+                                    ${currentLang === 'ml' ? 'കാറ്റ്' : 'Wind'}: ${weatherData.windSpeed} km/h
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-white rounded-xl p-6 shadow-sm">
+                            <h3 class="font-semibold text-lg mb-4">${currentLang === 'ml' ? 'വിളവൈദഗ്ദ്ധ്യം' : 'Crop Advisory'}</h3>
+                            <div class="space-y-3">
+                                ${weatherData.advisory.map(item => `
+                                    <div class="flex items-center space-x-3 p-3 bg-green-50 rounded-lg">
+                                        <i class="fas fa-seedling text-green-600"></i>
+                                        <span>${item}</span>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        async function getMarketPricesContent() {
+            const pricesData = await api.getMarketPrices();
+            
+            return `
+                <div class="slide-in">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6">${currentLang === 'ml' ? 'വിപണി വിലകൾ' : 'Market Prices'}</h2>
+                    
+                    <div class="bg-white rounded-xl overflow-hidden shadow-sm">
+                        <table class="w-full">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left">${currentLang === 'ml' ? 'വിള' : 'Crop'}</th>
+                                    <th class="px-6 py-3 text-left">${currentLang === 'ml' ? 'വിപണി' : 'Market'}</th>
+                                    <th class="px-6 py-3 text-right">${currentLang === 'ml' ? 'വില (കി.ഗ്രാം)' : 'Price (kg)'}</th>
+                                    <th class="px-6 py-3 text-right">${currentLang === 'ml' ? 'മാറ്റം' : 'Change'}</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200">
+                                ${pricesData.prices.map(item => `
+                                    <tr class="hover:bg-gray-50">
+                                        <td class="px-6 py-4">${item.crop}</td>
+                                        <td class="px-6 py-4">${item.market}</td>
+                                        <td class="px-6 py-4 text-right">₹${item.price}</td>
+                                        <td class="px-6 py-4 text-right ${item.change >= 0 ? 'text-green-600' : 'text-red-600'}">
+                                            ${item.change >= 0 ? '+' : ''}${item.change}%
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+        }
+
+        // ... Similar functions for other features (grievances, subsidies, govt-schemes)
+
+        // Logout function
+        function logout() {
+            tokenManager.removeToken();
+            window.location.href = '/login';
+        }
+
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Check authentication
+            const token = tokenManager.getToken();
+            if (!token) {
+                window.location.href = '/login';
+                return;
+            }
+
+            try {
+                // Load user data
+                const userResponse = await api.getCurrentUser();
+                if (userResponse.success) {
+                    currentUser = userResponse.user;
+                    localStorage.setItem('ks_user', JSON.stringify(currentUser));
+                    
+                    // Update UI
+                    document.getElementById('user-name').textContent = 
+                        `${currentUser.first_name} ${currentUser.last_name}`;
+                    document.getElementById('user-location').textContent = 
+                        `${currentUser.village || 'Unknown'}, ${currentUser.district || 'Unknown'}`;
+                    
+                    // Update profile
+                    const profileHtml = `
+                        <div class="space-y-3">
+                            <div><strong>${translations[currentLang]['name']}:</strong> ${currentUser.first_name} ${currentUser.last_name}</div>
+                            <div><strong>${translations[currentLang]['email']}:</strong> ${currentUser.email}</div>
+                            <div><strong>${translations[currentLang]['phone']}:</strong> ${currentUser.phone || 'Not set'}</div>
+                            <div><strong>${translations[currentLang]['location']}:</strong> ${currentUser.village || 'Not set'}, ${currentUser.district || 'Not set'}, ${currentUser.state || 'Not set'}</div>
+                            <div><strong>${translations[currentLang]['language']}:</strong> ${currentUser.language === 'ml' ? 'Malayalam' : 'English'}</div>
+                            <div><strong>${translations[currentLang]['join_date']}:</strong> ${new Date(currentUser.created_at).toLocaleDateString()}</div>
+                        </div>
+                    `;
+                    document.getElementById('user-profile').innerHTML = profileHtml;
+                }
+            } catch (error) {
+                console.error('Error loading user data:', error);
+                window.location.href = '/login';
+            }
+
+            // Set current date
+            document.getElementById('current-date').textContent = new Date().toLocaleDateString('en-IN', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+
+            // Set up language switcher
+            document.getElementById('lang-en').addEventListener('click', () => setLanguage('en'));
+            document.getElementById('lang-ml').addEventListener('click', () => setLanguage('ml'));
+
+            // Initialize with English
+            setLanguage('en');
+        });
+    </script>
+</body>
+</html>

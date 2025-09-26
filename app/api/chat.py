@@ -7,14 +7,16 @@ from app.services import AIService
 from app.services.translation_service import TranslationService
 from app.services.audio_service import AudioService
 from datetime import datetime
-import uuid
-import logging
+import uuid #Universally Unique Identifier
+import logging #-  logs generate karne ke liye use hota hai.
+
 
 chat_bp = Blueprint('chat', __name__)
 logger = logging.getLogger(__name__)
 
 @chat_bp.route('/', methods=['POST'])
-@jwt_required()
+@jwt_required()  #authenticated user hi access kar sake.
+
 def text_chat():
     try:
         user_id = get_jwt_identity()

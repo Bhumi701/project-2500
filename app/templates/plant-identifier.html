@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plant & Disease Identifier</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-left-color: #4f46e5;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .lang-btn.active {
+            background-color: #16a34a;
+            color: white;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transform: translateY(-2px);
+        }
+        .nav-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: #4f46e5;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
+
+    <a href="/chat" class="nav-btn">Go to Agri-Assistant Chat →</a>
+
+    <div class="w-full max-w-xl bg-white rounded-2xl shadow-xl p-6 md:p-8 space-y-6">
+        <div class="text-center">
+            <div class="flex justify-center items-center gap-3">
+                 <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-green-600" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M17.707 9.293a1 1 0 010 1.414l-7 7a1 1 0 01-1.414 0l-7-7A.997.997 0 012 10V5a3 3 0 013-3h10a3 3 0 013 3v5l-2.293-2.293a1 1 0 011.414-1.414l3 3zM5 4a1 1 0 00-1 1v4.586l6 6 6-6V5a1 1 0 00-1-1H5z" clip-rule="evenodd" />
+                    <path fill-rule="evenodd" d="M10 2a1 1 0 00-1 1v1a1 1 0 102 0V3a1 1 0 00-1-1zM5 5a1 1 0 00-1 1v1a1 1 0 102 0V6a1 1 0 00-1-1zM15 5a1 1 0 00-1 1v1a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                 </svg>
+                <h1 id="app-title" class="text-3xl font-bold text-gray-800">Plant Identifier</h1>
+            </div>
+            <p id="app-subtitle" class="text-gray-500 mt-2">Upload or take a picture of a plant to identify it and check for diseases.</p>
+        </div>
+
+        <div class="flex justify-center items-center gap-4 pt-2">
+            <button id="lang-en-btn" class="lang-btn active font-semibold py-2 px-5 rounded-full transition-all duration-300 bg-gray-200 text-gray-700">English</button>
+            <button id="lang-ml-btn" class="lang-btn font-semibold py-2 px-5 rounded-full transition-all duration-300 bg-gray-200 text-gray-700">മലയാളം</button>
+        </div>
+
+        <div class="space-y-4">
+            <div id="image-preview-container" class="w-full h-64 bg-gray-100 rounded-lg flex items-center justify-center border-2 border-dashed border-gray-300 hidden">
+                <img id="image-preview" src="#" alt="Selected plant" class="max-w-full max-h-full object-contain rounded-md"/>
+            </div>
+            <div id="placeholder-container" class="w-full h-64 bg-gray-100 rounded-lg flex flex-col items-center justify-center border-2 border-dashed border-gray-300 text-gray-500">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                <p id="placeholder-text" class="mt-2">Your image will appear here</p>
+            </div>
+            <input type="file" id="image-input" class="hidden" accept="image/*">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <button id="upload-btn" class="w-full bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:bg-blue-700 transition duration-300 flex items-center justify-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M5.5 13a3.5 3.5 0 01-.369-6.98 4 4 0 117.753-1.977A4.5 4.5 0 1113.5 13H11V9.414l-1.293 1.293a1 1 0 01-1.414-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L13 9.414V13H5.5z" />
+                        <path d="M9 13h2v5a1 1 0 11-2 0v-5z" />
+                    </svg>
+                    <span id="upload-btn-text">Upload from Gallery</span>
+                </button>
+                <button id="camera-btn" class="w-full bg-indigo-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:bg-indigo-700 transition duration-300 flex items-center justify-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M4 5a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V7a2 2 0 00-2-2h-1.586a1 1 0 01-.707-.293l-1.121-1.121A2 2 0 0011.172 3H8.828a2 2 0 00-1.414.586L6.293 4.707A1 1 0 015.586 5H4zm6 9a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd" />
+                    </svg>
+                    <span id="camera-btn-text">Take a Picture</span>
+                </button>
+            </div>
+        </div>
+
+        <button id="analyze-btn" disabled class="w-full bg-green-600 text-white font-bold py-3 px-6 rounded-lg shadow-lg hover:bg-green-700 transition duration-300 disabled:bg-gray-400 disabled:cursor-not-allowed">
+            <span id="analyze-btn-text">Analyze Image</span>
+        </button>
+
+        <div id="results-container" class="pt-4 border-t border-gray-200 hidden">
+            <h2 id="results-title" class="text-2xl font-bold text-gray-800 mb-3">Analysis Results</h2>
+            <div id="loader" class="flex justify-center items-center py-4 hidden">
+                <div class="spinner"></div>
+                <p id="loader-text" class="ml-4 text-gray-600">Analyzing, please wait...</p>
+            </div>
+            <div id="results-output" class="p-4 bg-gray-50 rounded-md text-gray-700 whitespace-pre-wrap leading-relaxed"></div>
+        </div>
+    </div>
+
+    <script>
+        // DOM Elements
+        const uploadBtn = document.getElementById('upload-btn');
+        const cameraBtn = document.getElementById('camera-btn');
+        const imageInput = document.getElementById('image-input');
+        const imagePreviewContainer = document.getElementById('image-preview-container');
+        const placeholderContainer = document.getElementById('placeholder-container');
+        const imagePreview = document.getElementById('image-preview');
+        const analyzeBtn = document.getElementById('analyze-btn');
+        const resultsContainer = document.getElementById('results-container');
+        const loader = document.getElementById('loader');
+        const resultsOutput = document.getElementById('results-output');
+        const langEnBtn = document.getElementById('lang-en-btn');
+        const langMlBtn = document.getElementById('lang-ml-btn');
+
+        let imageBase64 = null;
+        let imageMimeType = null;
+        let currentLanguage = 'en-US';
+
+        const translations = {
+            'en-US': {
+                'app-title': 'Plant Identifier',
+                'app-subtitle': 'Upload or take a picture of a plant to identify it and check for diseases.',
+                'placeholder-text': 'Your image will appear here',
+                'upload-btn-text': 'Upload from Gallery',
+                'camera-btn-text': 'Take a Picture',
+                'analyze-btn-text': 'Analyze Image',
+                'results-title': 'Analysis Results',
+                'loader-text': 'Analyzing, please wait...',
+                'error-api-key': '<strong>Error:</strong> API Key is missing.',
+                'error-select-image': 'Please select an image first.',
+                'error-invalid-response': 'Could not get a valid analysis.',
+                'error-generic': 'An error occurred: '
+            },
+            'ml-IN': {
+                'app-title': 'സസ്യങ്ങളെ തിരിച്ചറിയാം',
+                'app-subtitle': 'ഒരു സസ്യത്തെ തിരിച്ചറിയുന്നതിനും രോഗങ്ങൾ പരിശോധിക്കുന്നതിനും അതിന്റെ ചിത്രമെടുക്കുകയോ അപ്‌ലോഡ് ചെയ്യുകയോ ചെയ്യുക.',
+                'placeholder-text': 'നിങ്ങളുടെ ചിത്രം ഇവിടെ ദൃശ്യമാകും',
+                'upload-btn-text': 'ഗാലറിയിൽ നിന്ന് അപ്‌ലോഡ് ചെയ്യുക',
+                'camera-btn-text': 'ചിത്രമെടുക്കുക',
+                'analyze-btn-text': 'ചിത്രം വിശകലനം ചെയ്യുക',
+                'results-title': 'വിശകലന ഫലങ്ങൾ',
+                'loader-text': 'വിശകലനം ചെയ്യുന്നു, ദയവായി കാത്തിരിക്കുക...',
+                'error-api-key': '<strong>തെറ്റ്:</strong> API കീ ലഭ്യമല്ല.',
+                'error-select-image': 'ദയവായി ആദ്യം ഒരു ചിത്രം തിരഞ്ഞെടുക്കുക.',
+                'error-invalid-response': 'സാധുവായ ഒരു വിശകലനം ലഭിച്ചില്ല.',
+                'error-generic': 'ഒരു പിശക് സംഭവിച്ചു: '
+            }
+        };
+
+        const setLanguage = (lang) => {
+            currentLanguage = lang;
+            document.querySelectorAll('[id]').forEach(element => {
+                const translationKey = element.id.replace(/-text$/, ''); // Handle span elements inside buttons
+                if (translations[lang][element.id]) {
+                    element.textContent = translations[lang][element.id];
+                }
+            });
+            // Also update the text inside the buttons
+            document.getElementById('upload-btn-text').textContent = translations[lang]['upload-btn-text'];
+            document.getElementById('camera-btn-text').textContent = translations[lang]['camera-btn-text'];
+            document.getElementById('analyze-btn-text').textContent = translations[lang]['analyze-btn-text'];
+
+            langEnBtn.classList.toggle('active', lang === 'en-US');
+            langMlBtn.classList.toggle('active', lang === 'ml-IN');
+        };
+        
+        langEnBtn.addEventListener('click', () => setLanguage('en-US'));
+        langMlBtn.addEventListener('click', () => setLanguage('ml-IN'));
+
+        // Browser TTS function
+        const speakText = (text, lang) => {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = lang;
+                window.speechSynthesis.speak(utterance);
+            }
+        };
+
+        uploadBtn.addEventListener('click', () => { imageInput.removeAttribute('capture'); imageInput.click(); });
+        cameraBtn.addEventListener('click', () => { imageInput.setAttribute('capture', 'environment'); imageInput.click(); });
+
+        imageInput.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                const dataUrl = reader.result;
+                imagePreview.src = dataUrl;
+                const parts = dataUrl.split(',');
+                const mimeTypePart = parts[0].match(/:(.*?);/);
+                if(mimeTypePart && mimeTypePart[1]) {
+                    imageMimeType = mimeTypePart[1];
+                    imageBase64 = parts[1];
+                }
+                placeholderContainer.classList.add('hidden');
+                imagePreviewContainer.classList.remove('hidden');
+                analyzeBtn.disabled = false;
+                resultsContainer.classList.add('hidden');
+            };
+            reader.readAsDataURL(file);
+        });
+
+        // Updated analyze function for Flask backend
+        analyzeBtn.addEventListener('click', async () => {
+            if (!imageBase64 || !imageMimeType) {
+                alert(translations[currentLanguage]['error-select-image']);
+                return;
+            }
+
+            resultsContainer.classList.remove('hidden');
+            loader.classList.remove('hidden');
+            resultsOutput.classList.add('hidden');
+            analyzeBtn.disabled = true;
+
+            try {
+                const response = await fetch('/api/ai/analyze-plant', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        image_data: imageBase64,
+                        mime_type: imageMimeType,
+                        language: currentLanguage 
+                    })
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(`API Error: ${response.status} - ${errorData.error}`);
+                }
+                
+                const data = await response.json();
+                
+                if (data.analysis) {
+                    resultsOutput.textContent = data.analysis;
+                    speakText(data.analysis, currentLanguage);
+                } else {
+                    resultsOutput.textContent = translations[currentLanguage]['error-invalid-response'];
+                }
+            } catch (error) {
+                console.error("Analysis Error:", error);
+                resultsOutput.textContent = translations[currentLanguage]['error-generic'] + error.message;
+            } finally {
+                loader.classList.add('hidden');
+                resultsOutput.classList.remove('hidden');
+                analyzeBtn.disabled = false;
+            }
+        });
+
+        // Initialize default language
+        setLanguage(currentLanguage);
+    </script>
+</body>
+</html>

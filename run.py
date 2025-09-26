@@ -1,3 +1,4 @@
+#entry point h backend server ko start karne ke liye
 from app import create_app
 # from app.config import DevelopmentConfig
 import os

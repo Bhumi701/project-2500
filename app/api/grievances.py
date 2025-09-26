@@ -74,7 +74,8 @@ def get_user_grievances():
         if category:
             query = query.filter_by(category=category)
         
-        grievances = query.order_by(Grievance.created_at.desc()).all()
+        grievances = query.order_by(Grievance.created_at.desc()).all()  # grievance records ko latest date ke descending order mein fetch karna
+
         
         return jsonify({
             'grievances': [grievance.to_dict() for grievance in grievances]
